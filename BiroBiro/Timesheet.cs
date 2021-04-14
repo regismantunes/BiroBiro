@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace BiroBiro
 {
@@ -11,36 +13,38 @@ namespace BiroBiro
         public string TemplateName { get; set; } = "Planilha de Horas";
 
         public string GetTemplateFileName() => $"{TemplateName}.xlsx";
-        public string GetFileName(int year, int month) => $"{TemplateName} - {year:0000}-{month:00}.xlsx";
-        
-        private void CreateNewFile(int year, int month, bool overwrite = false)
+        private string GetDefaultFileName(int year, int month) => $"{TemplateName} - {year:0000}-{month:00}.xlsx";
+        private string GetDefaultFileNameN(int year, int month, int count) => $"{TemplateName} - {year:0000}-{month:00} ({count}).xlsx";
+
+        private string CreateNewFile(int year, int month)
         {
-            string strTemplateFileName = GetTemplateFileName();
-            if (!File.Exists(strTemplateFileName))
-                throw new FileNotFoundException($"The template file {strTemplateFileName} was not found.");
+            string templateFileName = GetTemplateFileName();
+            if (!File.Exists(templateFileName))
+                throw new FileNotFoundException($"The template file {templateFileName} was not found.");
 
-            string strNomeNovoArquivo = GetFileName(year, month);
-            if (File.Exists(strNomeNovoArquivo))
+            string newFileName = GetDefaultFileName(year, month);
+            int count = 0;
+            while (File.Exists(newFileName))
             {
-                if (!overwrite)
-                    throw new Exception($"The file {strNomeNovoArquivo} already exists.");
-
-                File.Delete(strNomeNovoArquivo);
+                count++;
+                newFileName = GetDefaultFileNameN(year, month, count);
             }
 
-            File.Copy(strTemplateFileName, strNomeNovoArquivo);
+            File.Copy(templateFileName, newFileName);
+
+            return newFileName;
         }
 
-        private void FillFile(int year, int month, int startDay = 1)
+        private void FillFile(string fileName, int year, int month, int startDay = 1)
         {
-            string strNomeNovoArquivo = GetFileName(year, month);
-            if (!File.Exists(strNomeNovoArquivo))
-                throw new FileNotFoundException($"The file {strNomeNovoArquivo} was not found.");
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException($"The file {fileName} was not found.");
 
             IReadOnlyList<DateTime> lstHolidays = Holidays.GetHolidays(year);
 
             Application excel = new();
-            Workbook wb = excel.Workbooks.Open(Path.Combine(AppContext.BaseDirectory, strNomeNovoArquivo), 0, false);
+            Workbooks wbs = excel.Workbooks;
+            Workbook wb = wbs.Open(Path.Combine(AppContext.BaseDirectory, fileName), 0, false);
             try
             {
                 Worksheet ws = wb.ActiveSheet;
@@ -74,15 +78,24 @@ namespace BiroBiro
             }
             finally
             {
+                int hWnd = excel.Application.Hwnd;
+                
                 wb.Close();
+                wbs.Close();
                 excel.Quit();
+
+                GetWindowThreadProcessId((IntPtr)hWnd, out uint processID);
+                Process.GetProcessById((int)processID).Kill();
             }
         }
 
-        public void CreateAndFillNewFile(int year, int month, int startDay = 1, bool overwrite = false)
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        public void CreateAndFillNewFile(int year, int month, int startDay = 1)
         {
-            CreateNewFile(year, month, overwrite);
-            FillFile(year, month, startDay);
+            string fileName = CreateNewFile(year, month);
+            FillFile(fileName, year, month, startDay);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace BiroBiro
                     DateTime.Today.AddDays((DateTime.Today.Day - 1) * -1);
 
                 Timesheet ts = new();
-                ts.CreateAndFillNewFile(startDate.Year, startDate.Month, startDate.Day, true);
+                ts.CreateAndFillNewFile(startDate.Year, startDate.Month, startDate.Day);
 
                 Console.WriteLine("The timesheet was created and completed successfully!");
             }
