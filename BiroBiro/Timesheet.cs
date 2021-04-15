@@ -10,20 +10,19 @@ namespace BiroBiro
 {
     public class Timesheet
     {
-        public string TemplateName { get; set; } = "Planilha de Horas";
+        public TimesheetTemplate Template { get; set; }
 
-        public string GetTemplateFileName() => $"{TemplateName}.xlsx";
-        private string GetDefaultFileName(int year, int month) => $"{TemplateName} - {year:0000}-{month:00}.xlsx";
-        private string GetDefaultFileNameN(int year, int month, int count) => $"{TemplateName} - {year:0000}-{month:00} ({count}).xlsx";
+        private string GetDefaultFileName(int year, int month) => $"{Template.FileName} - {year:0000}-{month:00}.xlsx";
+        private string GetDefaultFileNameN(int year, int month, int count) => $"{Template.FileName} - {year:0000}-{month:00}({count}).xlsx";
 
         private string CreateNewFile(int year, int month)
         {
-            string templateFileName = GetTemplateFileName();
+            string templateFileName = Template.GetFullFileName();
             if (!File.Exists(templateFileName))
                 throw new FileNotFoundException($"The template file {templateFileName} was not found.");
 
-            string newFileName = GetDefaultFileName(year, month);
             int count = 0;
+            string newFileName = GetDefaultFileName(year, month);
             while (File.Exists(newFileName))
             {
                 count++;
@@ -44,31 +43,63 @@ namespace BiroBiro
 
             Application excel = new();
             Workbooks wbs = excel.Workbooks;
-            Workbook wb = wbs.Open(Path.Combine(AppContext.BaseDirectory, fileName), 0, false);
+            Workbook wb = null;
             try
             {
+                wb = wbs.Open(Path.Combine(AppContext.BaseDirectory, fileName), 0, false);
                 Worksheet ws = wb.ActiveSheet;
 
                 DateTime date = new(year, month, 1);
-                ws.get_Range("A7").Value = date;
+                if (!string.IsNullOrEmpty(Template.CellMonthYear))
+                    ws.get_Range(Template.CellMonthYear).Value = date;
 
                 Random rd = new();
-                int row = 14;
+                int row = Template.RowStartDates;
                 do
                 {
-                    if (date.Day >= startDay && 
-                        date.DayOfWeek != DayOfWeek.Sunday && 
+                    if (date.Day >= startDay &&
+                        date.DayOfWeek != DayOfWeek.Sunday &&
                         date.DayOfWeek != DayOfWeek.Saturday &&
                         !lstHolidays.Contains(date))
                     {
-                        int dif = rd.Next(-15, 15);
-                        ws.get_Range($"C{row}").Value = date.AddHours(8).AddMinutes(dif).ToString("HH:mm");
-                        dif = rd.Next(-15, 15);
-                        ws.get_Range($"D{row}").Value = date.AddHours(12).AddMinutes(dif).ToString("HH:mm");
-                        dif = rd.Next(-15, 15);
-                        ws.get_Range($"E{row}").Value = date.AddHours(13).AddMinutes(dif).ToString("HH:mm");
-                        dif = rd.Next(-15, 15);
-                        ws.get_Range($"F{row}").Value = date.AddHours(17).AddMinutes(dif).ToString("HH:mm");
+                        int dif;
+                        //ws.get_Range($"C{row}").Value = date.AddHours(8).AddMinutes(dif).ToString("HH:mm");
+                        if (!string.IsNullOrEmpty(Template.CollumnStart1) &&
+                            !string.IsNullOrEmpty(Template.CollumnEnd1) &&
+                            Template.HourStart1 >= 0 && Template.HourStart1 < 24 &&
+                            Template.MinuteStart1 >= 0 && Template.MinuteStart1 < 60 &&
+                            Template.HourEnd1 >= 0 && Template.HourEnd1 < 24 &&
+                            Template.MinuteEnd1 >= 0 && Template.MinuteEnd1 < 60)
+                        {
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnStart1}{row}").Value = date.AddHours(Template.HourStart1).AddMinutes(Template.MinuteStart1 + dif).ToString("HH:mm");
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnEnd1}{row}").Value = date.AddHours(Template.HourEnd1).AddMinutes(Template.MinuteEnd1 + dif).ToString("HH:mm");
+                        }
+                        if (!string.IsNullOrEmpty(Template.CollumnStart2) &&
+                            !string.IsNullOrEmpty(Template.CollumnEnd2) &&
+                            Template.HourStart2 >= 0 && Template.HourStart2 < 24 &&
+                            Template.MinuteStart2 >= 0 && Template.MinuteStart2 < 60 &&
+                            Template.HourEnd2 >= 0 && Template.HourEnd2 < 24 &&
+                            Template.MinuteEnd2 >= 0 && Template.MinuteEnd2 < 60)
+                        {
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnStart2}{row}").Value = date.AddHours(Template.HourStart2).AddMinutes(Template.MinuteStart2 + dif).ToString("HH:mm");
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnEnd2}{row}").Value = date.AddHours(Template.HourEnd2).AddMinutes(Template.MinuteEnd2 + dif).ToString("HH:mm");
+                        }
+                        if (!string.IsNullOrEmpty(Template.CollumnStart3) &&
+                            !string.IsNullOrEmpty(Template.CollumnEnd3) &&
+                            Template.HourStart3 >= 0 && Template.HourStart3 < 24 &&
+                            Template.MinuteStart3 >= 0 && Template.MinuteStart3 < 60 &&
+                            Template.HourEnd3 >= 0 && Template.HourEnd3 < 24 &&
+                            Template.MinuteEnd3 >= 0 && Template.MinuteEnd3 < 60)
+                        {
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnStart3}{row}").Value = date.AddHours(Template.HourStart3).AddMinutes(Template.MinuteStart3 + dif).ToString("HH:mm");
+                            dif = rd.Next(-15, 15);
+                            ws.get_Range($"{Template.CollumnEnd3}{row}").Value = date.AddHours(Template.HourEnd3).AddMinutes(Template.MinuteEnd3 + dif).ToString("HH:mm");
+                        }
                     }
                     row++;
                     date = date.AddDays(1);
@@ -80,7 +111,7 @@ namespace BiroBiro
             {
                 int hWnd = excel.Application.Hwnd;
                 
-                wb.Close();
+                wb?.Close();
                 wbs.Close();
                 excel.Quit();
 
