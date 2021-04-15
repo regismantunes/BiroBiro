@@ -45,7 +45,7 @@ namespace BiroBiro
 
         private static void CreateFileHolidays(int year)
         {
-            WebRequest request = WebRequest.Create($"https://holidayapi.com/v1/holidays?pretty&key=0e53b7ed-2276-49b1-a1a7-d9e2d5beb19f&country=BR&year={year:0000}");
+            WebRequest request = WebRequest.Create($"https://holidayapi.com/v1/holidays?pretty&country=BR&year={year:0000}");
             request.Credentials = CredentialCache.DefaultCredentials;
             ((HttpWebRequest)request).UserAgent = null;
 
