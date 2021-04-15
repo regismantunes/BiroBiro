@@ -11,7 +11,7 @@ namespace BiroBiro
             double n = y - 19 * Math.Floor((double)(y / 19));
             double k = Math.Floor((c - 17) / 25);
             double i = c - Math.Floor(c / 4) - Math.Floor((c - k) / 3) + 19 * n + 15;
-            i -= 30 * Math.Floor((i / 30));
+            i -= 30 * Math.Floor(i / 30);
             i -= Math.Floor(i / 28) * (1 - Math.Floor(i / 28) * Math.Floor(29 / (i + 1)) * Math.Floor((21 - n) / 11));
             double j = y + Math.Floor((double)(y / 4)) + i + 2 - c + Math.Floor(c / 4);
             j -= 7 * Math.Floor(j / 7);

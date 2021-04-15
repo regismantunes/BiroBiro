@@ -1,10 +1,10 @@
-﻿using System;
-using System.IO;
-using Microsoft.Office.Interop.Excel;
+﻿using Microsoft.Office.Interop.Excel;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
 
 namespace BiroBiro
 {
@@ -62,44 +62,12 @@ namespace BiroBiro
                         date.DayOfWeek != DayOfWeek.Saturday &&
                         !lstHolidays.Contains(date))
                     {
-                        int dif;
-                        //ws.get_Range($"C{row}").Value = date.AddHours(8).AddMinutes(dif).ToString("HH:mm");
-                        if (!string.IsNullOrEmpty(Template.CollumnStart1) &&
-                            !string.IsNullOrEmpty(Template.CollumnEnd1) &&
-                            Template.HourStart1 >= 0 && Template.HourStart1 < 24 &&
-                            Template.MinuteStart1 >= 0 && Template.MinuteStart1 < 60 &&
-                            Template.HourEnd1 >= 0 && Template.HourEnd1 < 24 &&
-                            Template.MinuteEnd1 >= 0 && Template.MinuteEnd1 < 60)
-                        {
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnStart1}{row}").Value = date.AddHours(Template.HourStart1).AddMinutes(Template.MinuteStart1 + dif).ToString("HH:mm");
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnEnd1}{row}").Value = date.AddHours(Template.HourEnd1).AddMinutes(Template.MinuteEnd1 + dif).ToString("HH:mm");
-                        }
-                        if (!string.IsNullOrEmpty(Template.CollumnStart2) &&
-                            !string.IsNullOrEmpty(Template.CollumnEnd2) &&
-                            Template.HourStart2 >= 0 && Template.HourStart2 < 24 &&
-                            Template.MinuteStart2 >= 0 && Template.MinuteStart2 < 60 &&
-                            Template.HourEnd2 >= 0 && Template.HourEnd2 < 24 &&
-                            Template.MinuteEnd2 >= 0 && Template.MinuteEnd2 < 60)
-                        {
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnStart2}{row}").Value = date.AddHours(Template.HourStart2).AddMinutes(Template.MinuteStart2 + dif).ToString("HH:mm");
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnEnd2}{row}").Value = date.AddHours(Template.HourEnd2).AddMinutes(Template.MinuteEnd2 + dif).ToString("HH:mm");
-                        }
-                        if (!string.IsNullOrEmpty(Template.CollumnStart3) &&
-                            !string.IsNullOrEmpty(Template.CollumnEnd3) &&
-                            Template.HourStart3 >= 0 && Template.HourStart3 < 24 &&
-                            Template.MinuteStart3 >= 0 && Template.MinuteStart3 < 60 &&
-                            Template.HourEnd3 >= 0 && Template.HourEnd3 < 24 &&
-                            Template.MinuteEnd3 >= 0 && Template.MinuteEnd3 < 60)
-                        {
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnStart3}{row}").Value = date.AddHours(Template.HourStart3).AddMinutes(Template.MinuteStart3 + dif).ToString("HH:mm");
-                            dif = rd.Next(-15, 15);
-                            ws.get_Range($"{Template.CollumnEnd3}{row}").Value = date.AddHours(Template.HourEnd3).AddMinutes(Template.MinuteEnd3 + dif).ToString("HH:mm");
-                        }
+                        if (Template.WorkShift1 != null)
+                            FillCellsStartEnd(date, rd, ws, row, Template.WorkShift1);
+                        if (Template.WorkShift2 != null)
+                            FillCellsStartEnd(date, rd, ws, row, Template.WorkShift2);
+                        if (Template.WorkShift3 != null)
+                            FillCellsStartEnd(date, rd, ws, row, Template.WorkShift3);
                     }
                     row++;
                     date = date.AddDays(1);
@@ -110,13 +78,29 @@ namespace BiroBiro
             finally
             {
                 int hWnd = excel.Application.Hwnd;
-                
+
                 wb?.Close();
                 wbs.Close();
                 excel.Quit();
 
                 GetWindowThreadProcessId((IntPtr)hWnd, out uint processID);
                 Process.GetProcessById((int)processID).Kill();
+            }
+        }
+
+        private void FillCellsStartEnd(DateTime date, Random rd, Worksheet ws, int row, TimesheetTemplateWorkShift workShift)
+        {
+            if (!string.IsNullOrEmpty(workShift.CollumnStart) &&
+                !string.IsNullOrEmpty(workShift.CollumnEnd) &&
+                workShift.HourStart >= 0 && workShift.HourStart < 24 &&
+                workShift.MinuteStart >= 0 && workShift.MinuteStart < 60 &&
+                workShift.HourEnd >= 0 && workShift.HourEnd < 24 &&
+                workShift.MinuteEnd >= 0 && workShift.MinuteEnd < 60)
+            {
+                int dif = rd.Next(-15, 15);
+                ws.get_Range($"{workShift.CollumnStart}{row}").Value = date.AddHours(workShift.HourStart).AddMinutes(workShift.MinuteStart + dif).ToString("HH:mm");
+                dif = rd.Next(-15, 15);
+                ws.get_Range($"{workShift.CollumnEnd}{row}").Value = date.AddHours(workShift.HourEnd).AddMinutes(workShift.MinuteEnd + dif).ToString("HH:mm");
             }
         }
 

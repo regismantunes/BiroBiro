@@ -12,8 +12,8 @@ namespace BiroBiro
 
             try
             {
-                DateTime startDate = args != null && args.Length > 0 ? 
-                    DateTime.Parse(args[0]) : 
+                DateTime startDate = args != null && args.Length > 0 ?
+                    DateTime.Parse(args[0]) :
                     DateTime.Today.AddDays((DateTime.Today.Day - 1) * -1);
 
                 Timesheet ts = new();
@@ -31,14 +31,20 @@ namespace BiroBiro
                         FileName = "Planilha de Horas",
                         RowStartDates = 14,
                         CellMonthYear = "A7",
-                        CollumnStart1 = "C",
-                        CollumnEnd1 = "D",
-                        CollumnStart2 = "E",
-                        CollumnEnd2 = "F",
-                        HourStart1 = 8,
-                        HourEnd1 = 12,
-                        HourStart2 = 13,
-                        HourEnd2 = 17
+                        WorkShift1 = new TimesheetTemplateWorkShift()
+                        { 
+                            CollumnStart = "C",
+                            CollumnEnd = "D",
+                            HourStart = 8,
+                            HourEnd = 12,
+                        },
+                        WorkShift2 = new TimesheetTemplateWorkShift()
+                        {
+                            CollumnStart = "E",
+                            CollumnEnd = "F",
+                            HourStart = 13,
+                            HourEnd = 17,
+                        }
                     };
                     ts.Template.SaveToFile(defaultTemplateFileName);
                 }
