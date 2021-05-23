@@ -5,20 +5,37 @@ namespace BiroBiro
 {
     public static class Holidays
     {
-        private static DateTime EasterDay(int y)
+        private static DateTime EasterDay(int year)
         {
-            double c = Math.Floor((double)(y / 100));
-            double n = y - 19 * Math.Floor((double)(y / 19));
-            double k = Math.Floor((c - 17) / 25);
-            double i = c - Math.Floor(c / 4) - Math.Floor((c - k) / 3) + 19 * n + 15;
-            i -= 30 * Math.Floor(i / 30);
-            i -= Math.Floor(i / 28) * (1 - Math.Floor(i / 28) * Math.Floor(29 / (i + 1)) * Math.Floor((21 - n) / 11));
-            double j = y + Math.Floor((double)(y / 4)) + i + 2 - c + Math.Floor(c / 4);
-            j -= 7 * Math.Floor(j / 7);
-            double l = i - j;
-            double m = 3 + Math.Floor((l + 40) / 44);
-            double d = l + 28 - 31 * Math.Floor(m / 4);
-            return new DateTime(y, (int)(m - 1), (int)d);
+            int x = 24;
+            int y = 5;
+            int a = year % 19;
+            int b = year % 4;
+            int c = year % 7;
+            int d = ((19 * a) + x) % 30;
+            int e = ((2 * b) + (4 * c) + (6 * d) + y) % 7;
+            
+            int day, month;
+            if (d + e > 9)
+            {
+                day = d + e - 9;
+                month = 4;
+            }
+            else
+            {
+                day = d + e + 22;
+                month = 3;
+            }
+            
+            if (month == 4)
+            {
+                if (day == 26)
+                    day = 19;
+                else if (day == 25 && d == 28 && a > 10)
+                    day = 18;
+            }
+
+            return new DateTime(year, month, day);
         }
 
         public static IReadOnlyList<DateTime> GetHolidays(int y)
@@ -40,46 +57,5 @@ namespace BiroBiro
             DateTime[] dates = { anoNovo, carnaval1, carnaval2, paixaoCristo, pascoa, tiradentes, corpusChristi, diaTrabalho, diaIndependencia, nossaSenhora, finados, proclamaRepublica, natal };
             return new List<DateTime>(dates);
         }
-
-        /*private const string FILENAME = "holidays{0:0000}.json";
-
-        private static void CreateFileHolidays(int year)
-        {
-            WebRequest request = WebRequest.Create($"https://holidayapi.com/v1/holidays?pretty&country=BR&year={year:0000}");
-            request.Credentials = CredentialCache.DefaultCredentials;
-            ((HttpWebRequest)request).UserAgent = null;
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            if (response.StatusCode != HttpStatusCode.OK)
-                throw new Exception(response.StatusCode.ToString());
-
-            Stream receiveStream = response.GetResponseStream();
-
-            FileStream fs = File.OpenWrite(string.Format(FILENAME, year));
-
-            Span<byte> buffer = new();
-            receiveStream.Read(buffer);
-            fs.Write(buffer);
-
-            fs.Close();
-        }
-
-        public static IReadOnlyList<DateTime> GetHolidays(int year)
-        {
-            string fileName = string.Format(FILENAME, year);
-            
-            if (!File.Exists(fileName))
-                CreateFileHolidays(year);
-
-            List<DateTime> lstDates = new();
-            JsonDocument document = JsonDocument.Parse(File.ReadAllText(fileName));
-            JsonElement jeHolidays = document.RootElement.GetProperty("holidays");
-            
-            lstDates.AddRange(from JsonElement jeHoliday in jeHolidays.EnumerateArray()
-                              select jeHoliday.GetProperty("date").GetDateTime());
-
-            return lstDates;
-        }*/
     }
 }
